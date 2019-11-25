@@ -1,6 +1,7 @@
 /* -- Lib reference --//
  * Modbus:    https://github.com/andresarmento/modbus-arduino
  * CAN:       https://github.com/sandeepmistry/arduino-CAN
+ * EEPROM:    Internal EEPROM lib
  * Servo:     Internal servo lib
  * Interupt:  Internal interupt lib
  */
@@ -84,15 +85,34 @@
  * 
  * -- interupt free --
  * disableInterupts()
+ * EEPROM_read(addr, data){
+ *    scrijf data naar register op het gegeven addr.
+ * }
+ * 
+ * EEPROM_write(addr){
+ *    lees de infoud van addr en return dit.
+ * }
+ * 
  * CAN_Read(){
+ *  Lees de CAN bericht ID.
  *  while(CAN beschikbaar){
- *    
+ *    Lees de CAN bus informatie
  *  }
  * }
+ * 
+ * CAN_Write(ID){
+ *  Write een bericht naar de can bus met het gegeven ID.
+ *  
+ * }
+ * 
  * RS485_Read(){
  *  while(RS485 beschikbaar){
  *    
  *  }
+ * }
+ * 
+ * RS485_write(){
+ *    
  * }
  * Error_Cont(){
  *  
