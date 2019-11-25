@@ -25,13 +25,13 @@
  * }
  * 
  * PWM_output(){
- *  if(PWM signaal van lock servo > 1500 + deadBand){
+ *  if(Lock_servo_knop en hij was false){
  *    zet de lock servo PWM pin naar 2000ms (180 graden voor servo lib)
  *  }
- *  if(PWM signaal van lock servo < 1500 - deadBand){
+ *  if(Lock_servo_knop en hij was true){
  *    zet de lock servo PWM pin naar 1000ms (0 graden voor servo lib)
  *  }
- *  zet de PWM van de output PWM_aux naar de waarde van input PWM_aux
+ *  zet de PWM van de output PWM_aux naar 
  * }
  * Indication(){
  *  indicatie types:
