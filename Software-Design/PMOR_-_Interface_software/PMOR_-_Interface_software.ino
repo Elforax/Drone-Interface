@@ -106,13 +106,12 @@
  * }
  * 
  * RS485_Read(){
- *  while(RS485 beschikbaar){
- *    
- *  }
+ *  kijk op de rs485 bus of er registers en coils zijn aangepast.
+ *  zo ja neem dit over in een locale array
  * }
  * 
  * RS485_write(){
- *    
+ *    Update the local holding registers and coils
  * }
  * Error_Cont(){
  *  
