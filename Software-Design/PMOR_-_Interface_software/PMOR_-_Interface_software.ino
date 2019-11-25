@@ -114,7 +114,12 @@
  *    Update the local holding registers and coils
  * }
  * Error_Cont(){
- *  
+ * 
+ *    Set de Error flag array waardes naar true voor de speciefike error
+ *    
+ *    While(true){
+ *      Roep indicatoren() op.
+ *    }
  * }
  * enableInterupts()
  * -------------------
