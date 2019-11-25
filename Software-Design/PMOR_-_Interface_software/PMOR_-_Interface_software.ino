@@ -19,9 +19,9 @@
  * Buzzer 1x
  * 
  * Functions:
- * PWM_input(){
- *  lees op CHANGE interuptbasis de pulse tijd van het inkomende PWM signaal
- *  sla dit op in een volitaile int variable
+ * Digital_input(){
+ *  lees op CHANGE interupt basis de Digitale inputs in en
+ *  sla dit op in een volitaile bool variable.
  * }
  * 
  * PWM_output(){
