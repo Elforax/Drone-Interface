@@ -26,12 +26,13 @@ bool lock_servo = false;
 bool state_change = false;
 
 //CAN bus variables
-unsigned int msg_id = 0xFFF;
+unsigned int msg_id = 0x7FF;
 unsigned int packet_size = 0;
 byte Data[8];
 
 long debouncing_time = 50; //Debouncing Time in Milliseconds
 volatile unsigned long last_micros;
+bool interruptOn = true;
 
 Servo Lock;
 Servo Ext_servo;
@@ -64,9 +65,10 @@ void setup() {
 
   lock_toggle(1);
   ext_servo_control(0, false);
-  can_write(0xF00);
+  can_write(0x07FF);
   delay(10);
   interupt_activate();
+  interruptOn = true;
 
 }
 
@@ -77,8 +79,10 @@ void loop() {
     state_change = false;
   }
   noInterrupts();
+  interruptOn = false;
   can_controller();
   interrupts();
+  interruptOn = true;
 }
 
 
@@ -164,6 +168,9 @@ void can_input(){
 }
 
 void can_write(unsigned int id){
+  if(interruptOn){
+    noInterrupts();
+  }
   Serial.print("Sending id 0x");
   Serial.println(id, HEX);
   switch(id){
@@ -195,10 +202,10 @@ void can_write(unsigned int id){
       CAN.write(digitalRead(18));
       CAN.endPacket();
       break;
-    case 0xF00:
+    case 0x7FF:
       Serial.println("Starting packet");
       //Arduino online
-      CAN.beginPacket(0xF00);
+      CAN.beginPacket(id);
       CAN.write('S');
       CAN.write('A');
       CAN.write('X');
@@ -210,6 +217,9 @@ void can_write(unsigned int id){
       break;
   }
   delay(100);
+  if(interruptOn){
+    interrupts();
+  }
 }
 
 void can_read(){
