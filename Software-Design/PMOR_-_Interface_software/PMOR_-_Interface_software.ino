@@ -198,7 +198,7 @@ void can_write(unsigned int id){
     case 0xF00:
       Serial.println("Starting packet");
       //Arduino online
-      CAN.beginPacket(id);
+      CAN.beginPacket(0xF00);
       CAN.write('S');
       CAN.write('A');
       CAN.write('X');
@@ -209,6 +209,7 @@ void can_write(unsigned int id){
       Serial.println("Ending packet");
       break;
   }
+  delay(100);
 }
 
 void can_read(){
