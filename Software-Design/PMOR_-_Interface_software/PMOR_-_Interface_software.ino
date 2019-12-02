@@ -5,134 +5,90 @@
  * Servo:     Internal servo lib
  * Interupt:  Internal interupt lib
  */
+ 
+#include <Servo.h>
+#include <EEPROM.h>
+#include <CAN.h>
 
-/*-- pseudo code --//
- * Inputs:
- * PWM inputs 2x 
- * CAN bus input (SPI)
- * RS485 bus (RX, TX)
- * 
- * Outputs:
- * PWM 1x (servo type)
- * Servo 1x
- * LED 1x
- * Buzzer 1x
- * 
- * Functions:
- * Digital_input(){
- *  lees op CHANGE interupt basis de Digitale inputs in en
- *  sla dit op in een volitaile bool variable.
- * }
- * 
- * PWM_output(){
- *  if(Lock_servo_knop en hij was false){
- *    zet de lock servo PWM pin naar 2000ms (180 graden voor servo lib)
- *  }
- *  if(Lock_servo_knop en hij was true){
- *    zet de lock servo PWM pin naar 1000ms (0 graden voor servo lib)
- *  }
- *  zet de PWM van de output PWM_aux naar 
- * }
- * Indication(){
- *  indicatie types:
- *  / = 0.2s
- *  * = 0.5s
- *  - = 1s
- * 
- * 
- *  if(!Error_flag){
- *    if(lock servo == gesloten){
- *      zet lock LED aan
- *      laat de buzzer 1x / aangaan
- *    }else{
- *      zet lock LED uit
- *      laat de buzzer 1x / aangaan
- *    }
- *    if(lock servo == gesloten){
- *      zet lock LED aan
- *      laat de buzzer 1x / aangaan
- *    }else{
- *      zet lock LED uit
- *      laat de buzzer 1x / aangaan
- *    }
- *  }else{
- *    switch(error type){
- *      case 0: // CAN bus
- *        switch(error num){
- *          case 0: //CAN not OK
- *            laat led met **** interval  knipperen
- *            en de buzzer ook opdeze interval aangaan
- *          break;
- *          ...
- *        }
- *      break;
- *      case 1: // RS485 bus
- *        switch(error num){
- *          case 0: //RS485 not OK
- *            laat led met -*** interval  knipperen
- *            en de buzzer ook opdeze interval aangaan
- *          break;
- *          ...
- *        }
- *      break;
- *      default:  // Error type bestaat niet of is niet herkent
- *        laat led met //// interval  knipperen
- *        en de buzzer ook op deze interval aangaan maar dan geinverteerd
- *      break;
- *    }
- *  }
- * }
- * 
- * -- interupt free --
- * disableInterupts()
- * EEPROM_read(addr, data){
- *    scrijf data naar register op het gegeven addr.
- * }
- * 
- * EEPROM_write(addr){
- *    lees de infoud van addr en return dit.
- * }
- * 
- * CAN_Read(){
- *  Lees de CAN bericht ID.
- *  while(CAN beschikbaar){
- *    Lees de CAN bus informatie
- *  }
- * }
- * 
- * CAN_Write(ID){
- *  Write een bericht naar de can bus met het gegeven ID.
- *  
- * }
- * 
- * RS485_Read(){
- *  kijk op de rs485 bus of er registers en coils zijn aangepast.
- *  zo ja neem dit over in een locale array
- * }
- * 
- * RS485_write(){
- *    Update the local holding registers and coils
- * }
- * Error_Cont(){
- * 
- *    Set de Error flag array waardes naar true voor de speciefike error
- *    
- *    While(true){
- *      Roep indicatoren() op.
- *    }
- * }
- * enableInterupts()
- * -------------------
- * 
- * -----------------*/
+//- Pin defenitions -//
+#define LOCK_SWITCH A0
+#define EXT_INTERUPT0 2
+#define EXT_INTERUPT1 6
 
+#define EXT_PWM 3
+#define LOCK_SERVO 5
+#define BUZZER A3
+#define LOCK_LED A2
+//-------------------//
+
+bool const DEVMODE = true;
+
+bool lock_servo = false;
+
+Servo Lock;
+
+void lock_toggle(int);
 
 void setup() {
   // put your setup code here, to run once:
+  pinMode(LOCK_SWITCH, INPUT_PULLUP);
+  pinMode(EXT_INTERUPT0, INPUT_PULLUP);
+  pinMode(EXT_INTERUPT1, INPUT_PULLUP);
+  
+  pinMode(LOCK_LED, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+  pinMode(LOCK_SERVO, OUTPUT);
+  pinMode(EXT_PWM, OUTPUT);
+
+  Lock.attach(LOCK_SERVO);
+
+  lock_toggle(1);
+
+  if(DEVMODE){
+    Serial.begin(115200);
+    Serial.println("Dev mode active!");
+  }
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  Indication();
+  //lock_toggle(-1);
+  delay(1000);
+  
+}
 
+void lock_toggle(int state){
+  switch(state){
+    case -1:
+      lock_servo = !lock_servo;
+      if(lock_servo){
+        Lock.write(180);
+      }else{
+        Lock.write(0);
+      }
+      break;
+    case 0:
+      lock_servo = false;
+      Lock.write(0);
+      break;
+    case 1:
+      lock_servo = true;
+      Lock.write(180);
+      break;
+    default:
+      if(DEVMODE){
+        Serial.println("State ID not known (lock_toggle)");
+      }
+      break;
+  }
+}
+
+void Indication(){
+  if(lock_servo){
+    digitalWrite(LOCK_LED, HIGH);
+  }else{
+    digitalWrite(LOCK_LED, LOW);
+  }
 }
