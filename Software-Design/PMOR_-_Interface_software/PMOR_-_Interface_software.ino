@@ -36,6 +36,8 @@ volatile unsigned long last_micros;
 Servo Lock;
 Servo Ext_servo;
 
+void(* resetFunc) (void) = 0;
+
 void setup() {
   if(DEVMODE){
     Serial.begin(115200);
@@ -62,6 +64,7 @@ void setup() {
 
   lock_toggle(1);
   ext_servo_control(0, false);
+  can_write(0xF00);
   delay(10);
   interupt_activate();
 
@@ -82,6 +85,40 @@ void loop() {
 void can_controller(){
   can_read();
   if(packet_size > 0){
+    if(0x100 <= msg_id && msg_id <= 0x109){
+      can_request();
+    }
+    if(0x110 <= msg_id && msg_id <= 0x120){
+      can_input();
+    }
+  }
+}
+
+void can_request(){
+  switch(msg_id){
+    case 0x100:
+      //Lock status
+      can_write(0x090);
+      break;
+    case 0x101:
+      //Current Ext_PWM value
+      can_write(0x091);
+      break;
+    case 0x102:
+      //EEPROM register read
+      can_write(0x092);
+      break;
+    case 0x103:
+      //Indicator status
+      can_write(0x093);
+      break;
+    case 0x104:
+      // retrive the error list;
+      break;
+  }
+}
+
+void can_input(){
     switch(msg_id){
     case 0x110:
       if(Data[0] == 0 || Data[0] == 1){
@@ -107,7 +144,70 @@ void can_controller(){
         ext_servo_control(180, false);
       }
       break;
-    }
+    case 0x114:
+      // Writing EEPROM data
+      break;
+    case 0x115:
+      int time_ms = 0;
+      for(int i=0; i<sizeof(Data);i++){
+        time_ms += Data[i];
+      }
+      buzzer_active(time_ms);
+      break;
+    case 0x116:
+      // for error clearing
+      break;
+    case 0x117:
+      resetFunc(); // resets the arduino
+      break;
+  }
+}
+
+void can_write(unsigned int id){
+  Serial.print("Sending id 0x");
+  Serial.println(id, HEX);
+  switch(id){
+    case 0x090:
+      //Lock status response
+      CAN.beginPacket(id);
+      CAN.write(lock_servo);
+      CAN.endPacket();
+      break;
+    case 0x091:
+      //Current Ext_PWM value response
+      CAN.beginPacket(id);
+      CAN.write(Ext_servo.read());
+      CAN.endPacket();
+      break;
+    case 0x092:
+      //EEPROM register response
+      CAN.beginPacket(id);
+      CAN.write('0');
+      CAN.endPacket();
+      break;
+    case 0x093:
+      //EEPROM register response
+      CAN.beginPacket(id);
+      CAN.write(digitalRead(14));
+      CAN.write(digitalRead(2));
+      CAN.write(digitalRead(6));
+      CAN.write(digitalRead(16));
+      CAN.write(digitalRead(18));
+      CAN.endPacket();
+      break;
+    case 0xF00:
+      Serial.println("Starting packet");
+      //Arduino online
+      CAN.beginPacket(id);
+      CAN.write('S');
+      CAN.write('A');
+      CAN.write('X');
+      CAN.write('I');
+      CAN.write('O');
+      CAN.write('N');
+      CAN.endPacket();
+      Serial.println("Ending packet");
+      break;
   }
 }
 
@@ -141,7 +241,12 @@ void can_read(){
       }
       Serial.println();
     }
-
+    
+    if(packet_size != 8){
+      for(int i = packet_size-1; i<sizeof(Data); i++){
+        Data[i] = 0;
+      }
+    }
     Serial.println();
   }
 }
