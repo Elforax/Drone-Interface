@@ -67,7 +67,7 @@ void setup() {
 
   lock_toggle(1);                     // Lock de Servo on startup (!! Needs to change to when the button is pressed!!)
   ext_servo_control(0, false);        // Sets the External servo to 0 degrees
-  can_write(0x7FF);                   // --------- > function is incompleter needes to be finished!!!!
+  //can_write(0x7FF);                   // --------- > function is incompleter needes to be finished!!!!
   delay(10);
   interupt_activate();                // Starting interrupt routines
 }
@@ -107,16 +107,12 @@ void can_request(){                           // Procces the CAN requests based 
       //Current Ext_PWM value
       can_write(0x091);
       break;
-    case 0x102:
-      //EEPROM register read
-      can_write(0x092);
-      break;
     case 0x103:
       //Indicator status
       can_write(0x093);
       break;
     case 0x104:
-      // retrive the error list;
+      // retrive the warnning list;
       break;
   }
 }
@@ -147,18 +143,12 @@ void can_input(){                             // Procces the CAN inputs based on
         ext_servo_control(180, false);
       }
       break;
-    case 0x114:
-      // Writing EEPROM data
-      break;
     case 0x115:
       int time_ms = 0;
       for(int i=0; i<sizeof(Data);i++){
         time_ms += Data[i];
       }
       buzzer_active(time_ms);
-      break;
-    case 0x116:
-      // for error clearing
       break;
     case 0x117:
       resetFunc(); // resets the arduino
@@ -271,7 +261,8 @@ void interupt_activate(){
   PCMSK1 |= (1 << PCINT8);      //adds in A0 (D14) to the interupt vector PCINT1
 }
 
-ISR(PCINT1_vect){                                                     // Interrupt routine for analog ports
+ISR(PCINT1_vect){               // Interrupt routine for analog ports
+  Serial.println("interupt 1");
   if((long)(micros() - last_micros) >= debouncing_time * 1000) {
     if(!digitalRead(14)){  //14 = A0
       lock_toggle(-1);
