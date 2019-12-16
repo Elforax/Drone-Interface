@@ -67,7 +67,7 @@ void setup() {
 
   lock_toggle(1);                     // Lock de Servo on startup (!! Needs to change to when the button is pressed!!)
   ext_servo_control(0, false);        // Sets the External servo to 0 degrees
-  can_write(0x7FF);
+  can_write(0x7FF);                   // --------- > function is incompleter needes to be finished!!!!
   delay(10);
   interupt_activate();                // Starting interrupt routines
 }
