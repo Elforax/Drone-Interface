@@ -78,26 +78,26 @@ void loop() {
     state_change = false;
   }
   noInterrupts();                     // turn off interrupts
-  interruptOn = false;                // set interrupt state to false
+  interruptOn = false;                // set interrupt state too false
   can_controller();                   // 
   interrupts();                       // turn on interrupts
-  interruptOn = true;
+  interruptOn = true;                 // set interrupt state too true
 }
 
 
 void can_controller(){
-  can_read();
-  if(packet_size > 0){
-    if(0x100 <= msg_id && msg_id <= 0x109){
-      can_request();
+  can_read();                                 // Read the CAN bus
+  if(packet_size > 0){                        // If a package is found
+    if(0x100 <= msg_id && msg_id <= 0x109){   // Test if the Message in a request
+      can_request();                          // Run the request function for te CAN bus
     }
-    if(0x110 <= msg_id && msg_id <= 0x120){
-      can_input();
+    if(0x110 <= msg_id && msg_id <= 0x120){   // Test if the Message in a input
+      can_input();                            // Run the input function for te CAN bus
     }
   }
 }
 
-void can_request(){
+void can_request(){                           // Procces the CAN requests based on there Message ID
   switch(msg_id){
     case 0x100:
       //Lock status
@@ -121,7 +121,7 @@ void can_request(){
   }
 }
 
-void can_input(){
+void can_input(){                             // Procces the CAN inputs based on there Message ID
     switch(msg_id){
     case 0x110:
       if(Data[0] == 0 || Data[0] == 1){
@@ -166,7 +166,7 @@ void can_input(){
   }
 }
 
-void can_write(unsigned int id){
+void can_write(unsigned int id){              // Write Information to the CAN bus with a specific ID -------------> Needs finishing still !!!!
   if(interruptOn){
     noInterrupts();
   }
@@ -221,7 +221,7 @@ void can_write(unsigned int id){
   }
 }
 
-void can_read(){
+void can_read(){                              // Read the CAN bus if a message is avaliable
   packet_size = CAN.parsePacket();
   //Serial.println(packet_size);
 
