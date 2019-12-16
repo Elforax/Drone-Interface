@@ -23,7 +23,7 @@
 bool const DEVMODE = true;          // Activeerd de serial poort voor debugging
 
 bool lock_servo = false;            // Status van de lock servo (true = Locked; false = Open) 
-bool state_change = false;          // Status of the lock servo has changed
+bool state_change = false;          // When a status changes this will be set true
 
 //CAN bus variables
 unsigned int msg_id = 0x7FF;        // recieved Message ID
@@ -73,15 +73,14 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  if(state_change){
+  if(state_change){                   // Update indicators when State has changed
     Indication();
     state_change = false;
   }
-  noInterrupts();
-  interruptOn = false;
-  can_controller();
-  interrupts();
+  noInterrupts();                     // turn off interrupts
+  interruptOn = false;                // set interrupt state to false
+  can_controller();                   // 
+  interrupts();                       // turn on interrupts
   interruptOn = true;
 }
 
