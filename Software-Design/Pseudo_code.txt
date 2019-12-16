@@ -1,7 +1,5 @@
 /* -- Lib reference --//
- * Modbus:    https://github.com/andresarmento/modbus-arduino
  * CAN:       https://github.com/sandeepmistry/arduino-CAN
- * EEPROM:    Internal EEPROM lib
  * Servo:     Internal servo lib
  * Interupt:  Internal interupt lib
  */
@@ -85,14 +83,6 @@
  * 
  * -- interupt free --
  * disableInterupts()
- * EEPROM_read(addr, data){
- *    scrijf data naar register op het gegeven addr.
- * }
- * 
- * EEPROM_write(addr){
- *    lees de infoud van addr en return dit.
- * }
- * 
  * CAN_Read(){
  *  Lees de CAN bericht ID.
  *  while(CAN beschikbaar){
@@ -105,14 +95,6 @@
  *  
  * }
  * 
- * RS485_Read(){
- *  kijk op de rs485 bus of er registers en coils zijn aangepast.
- *  zo ja neem dit over in een locale array
- * }
- * 
- * RS485_write(){
- *    Update the local holding registers and coils
- * }
  * Error_Cont(){
  * 
  *    Set de Error flag array waardes naar true voor de speciefike error
