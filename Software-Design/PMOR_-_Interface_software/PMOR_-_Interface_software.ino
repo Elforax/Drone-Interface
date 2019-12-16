@@ -271,7 +271,7 @@ void interupt_activate(){
   PCMSK1 |= (1 << PCINT8);      //adds in A0 (D14) to the interupt vector PCINT1
 }
 
-ISR(PCINT1_vect){
+ISR(PCINT1_vect){                                                     // Interrupt routine for analog ports
   if((long)(micros() - last_micros) >= debouncing_time * 1000) {
     if(!digitalRead(14)){  //14 = A0
       lock_toggle(-1);
@@ -280,20 +280,20 @@ ISR(PCINT1_vect){
   }
 }
 
-ISR(PCINT2_vect){
+ISR(PCINT2_vect){                                                     // Interrupt routine for ports D0-D7
   Serial.println("interupt 2");
   if((long)(micros() - last_micros) >= debouncing_time * 1000) {
-    if(!digitalRead(EXT_INTERUPT0)){
+    if(!digitalRead(EXT_INTERUPT0)){                                  // Toggle the state of the EXT_Servo between 0 and 180 degrees
       ext_servo_control(0, true);
     }
-    if(!digitalRead(EXT_INTERUPT1)){
+    if(!digitalRead(EXT_INTERUPT1)){                                  // Toggle the state of the EXT_Servo between 0 and 180 degrees
       ext_servo_control(0, true);
     }
-    last_micros = micros();
+    last_micros = micros();                                           // Update the debouncer
   }
 }
 
-void ext_servo_control(int angle, bool is_sw){
+void ext_servo_control(int angle, bool is_sw){                        // Control th External servo
   if(is_sw){
     if(Ext_servo.read() <= 90){
       Ext_servo.write(150);
@@ -307,7 +307,7 @@ void ext_servo_control(int angle, bool is_sw){
   }
 }
 
-void lock_toggle(int state){
+void lock_toggle(int state){                                          // Control th Lock servo
   int old_lock = lock_servo;
   switch(state){
     case -1:
@@ -344,17 +344,17 @@ void lock_toggle(int state){
   }
 }
 
-void Indication(){
-  if(lock_servo){
+void Indication(){                    // Control the Indicators
+  if(lock_servo){                     // Drive the LOCK_LED based on the lock servo status
     digitalWrite(LOCK_LED, HIGH);
-    buzzer_active(200);
+    buzzer_active(200);               // Beep the buzzer for 200ms
   }else{
     digitalWrite(LOCK_LED, LOW);
-    buzzer_active(200);
+    buzzer_active(200);               // Beep the buzzer for 200ms
   }
 }
 
-void buzzer_active(int ms){
+void buzzer_active(int ms){           // Run the buzzer for a given amount og timein ms
   digitalWrite(BUZZER, HIGH);
   delay(ms);
   digitalWrite(BUZZER, LOW); 
