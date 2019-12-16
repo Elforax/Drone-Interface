@@ -61,17 +61,15 @@ void setup() {
   pinMode(LOCK_SERVO, OUTPUT);
   pinMode(EXT_PWM, OUTPUT);
 
-  // servo objectes
+  // servo objectes pin attachment
   Lock.attach(LOCK_SERVO);
   Ext_servo.attach(EXT_PWM);
 
-  lock_toggle(1);
-  ext_servo_control(0, false);
-  can_write(0x07FF);
+  lock_toggle(1);                     // Lock de Servo on startup (!! Needs to change to when the button is pressed!!)
+  ext_servo_control(0, false);        // Sets the External servo to 0 degrees
+  can_write(0x7FF);
   delay(10);
-  interupt_activate();
-  interruptOn = true;
-
+  interupt_activate();                // Starting interrupt routines
 }
 
 void loop() {
@@ -265,6 +263,7 @@ void can_read(){
 }
 
 void interupt_activate(){
+  interruptOn = true;
   PCICR |= (1 << PCIE2);        //Sets pin change interupt for PORTD to true
   PCMSK2 |= (1 << PCINT22);     //adds in D6 to the interupt vector PCINT2
   PCMSK2 |= (1 << PCINT18);     //adds in D2 to the interupt vector PCINT2
