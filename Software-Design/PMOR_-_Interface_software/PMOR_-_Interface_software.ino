@@ -20,33 +20,35 @@
 #define LOCK_LED A2
 //-------------------//
 
-bool const DEVMODE = true;
+bool const DEVMODE = true;          // Activeerd de serial poort voor debugging
 
-bool lock_servo = false;
-bool state_change = false;
+bool lock_servo = false;            // Status van de lock servo (true = Locked; false = Open) 
+bool state_change = false;          // Status of the lock servo has changed
 
 //CAN bus variables
-unsigned int msg_id = 0x7FF;
-unsigned int packet_size = 0;
-byte Data[8];
+unsigned int msg_id = 0x7FF;        // recieved Message ID
+unsigned int packet_size = 0;       // recieved Packet size
+byte Data[8];                       // recieved Data array of 8 bytes
 
-long debouncing_time = 50; //Debouncing Time in Milliseconds
-volatile unsigned long last_micros;
-bool interruptOn = true;
+long debouncing_time = 50;          // Debouncing Time in Milliseconds
+volatile unsigned long last_micros; // Elapsed time while debouncing
+bool interruptOn = true;            // Saves the state of the interupts routine
 
-Servo Lock;
-Servo Ext_servo;
+Servo Lock;                         // Lock servo object
+Servo Ext_servo;                    // External servo object
 
-void(* resetFunc) (void) = 0;
+void(* resetFunc) (void) = 0;       // Arduino internal reset routine
 
 void setup() {
-  if(DEVMODE){
+  if(DEVMODE){                      // Opens serial if dev mode is true
     Serial.begin(115200);
     Serial.println("Dev mode active!");
   }
 
-  if (!CAN.begin(500E3) && DEVMODE) {
-    Serial.println("Starting CAN failed!");
+  while (!CAN.begin(500E3)) {                 // Open CAN bus interface
+    if(DEVMODE){
+      Serial.println("Starting CAN failed!"); // if opening CAN fails and dev mode is true write to serial
+    }
   }
   
   //Pin mode setup
