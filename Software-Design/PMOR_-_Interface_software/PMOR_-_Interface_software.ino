@@ -23,7 +23,9 @@
 bool const DEVMODE = true;          // Activeerd de serial poort voor debugging
 
 bool lock_servo = false;            // Status van de lock servo (true = Locked; false = Open) 
+bool lock_flag = false;
 bool state_change = false;          // When a status changes this will be set true
+int lock_speed = 1;
 
 //CAN bus variables
 unsigned int msg_id = 0x7FF;        // recieved Message ID
@@ -46,6 +48,8 @@ void setup() {
   }
 
   while (!CAN.begin(500E3)) {                 // Open CAN bus interface
+    buzzer_active(500);
+    delay(500);
     if(DEVMODE){
       Serial.println("Starting CAN failed!"); // if opening CAN fails and dev mode is true write to serial
     }
@@ -65,9 +69,15 @@ void setup() {
   Lock.attach(LOCK_SERVO);
   Ext_servo.attach(EXT_PWM);
 
-  lock_toggle(1);                     // Lock de Servo on startup (!! Needs to change to when the button is pressed!!)
+  lock_flag = true;                     // Lock de Servo on startup (!! Needs to change to when the button is pressed!!)
   ext_servo_control(0, false);        // Sets the External servo to 0 degrees
+
+  noInterrupts();                     // turn off interrupts
+  interruptOn = false;                // set interrupt state too false
   //can_write(0x7FF);                   // --------- > function is incompleter needes to be finished!!!!
+  interrupts();                       // turn on interrupts
+  interruptOn = true;                 // set interrupt state too true
+  
   delay(10);
   interupt_activate();                // Starting interrupt routines
 }
@@ -76,6 +86,10 @@ void loop() {
   if(state_change){                   // Update indicators when State has changed
     Indication();
     state_change = false;
+  }
+  if(lock_flag){
+    lock_toggle(); 
+    lock_flag = false;
   }
   noInterrupts();                     // turn off interrupts
   interruptOn = false;                // set interrupt state too false
@@ -121,7 +135,7 @@ void can_input(){                             // Procces the CAN inputs based on
     switch(msg_id){
     case 0x110:
       if(Data[0] == 0 || Data[0] == 1){
-        lock_toggle(Data[0]);
+        lock_toggle();
       }
       break;
     case 0x111:
@@ -264,8 +278,8 @@ void interupt_activate(){
 ISR(PCINT1_vect){               // Interrupt routine for analog ports
   Serial.println("interupt 1");
   if((long)(micros() - last_micros) >= debouncing_time * 1000) {
-    if(!digitalRead(14)){  //14 = A0
-      lock_toggle(-1);
+    if(!digitalRead(14)){       //14 = A0
+      lock_flag = true;
     }
     last_micros = micros();
   }
@@ -298,32 +312,22 @@ void ext_servo_control(int angle, bool is_sw){                        // Control
   }
 }
 
-void lock_toggle(int state){                                          // Control th Lock servo
+void lock_toggle(){                                          // Control th Lock servo
   int old_lock = lock_servo;
-  switch(state){
-    case -1:
-      lock_servo = !lock_servo;
-      if(lock_servo){
-        Lock.write(150);
-      }else{
-        Lock.write(0);
-      }
-      break;
-    case 0:
-      Lock.write(0);
-      lock_servo = false;
-      break;
-    case 1:
-      Lock.write(150);
-      lock_servo = true;
-      break;
-    default:
-      if(DEVMODE){
-        Serial.println("State ID not known (lock_toggle)");
-      }
-      break;
+  
+  if(lock_servo){
+    for (int pos = 0; pos <= 180; pos += 1) {
+      Lock.write(pos);                    // tell servo to go to position in variable 'pos'
+      delay(lock_speed);                           // waits 15ms for the servo to reach the position
+    }
+  }else{
+    for (int pos = 180; pos >= 0; pos -= 1) {
+      Lock.write(pos);                    // tell servo to go to position in variable 'pos'
+      delay(lock_speed);                           // waits 15ms for the servo to reach the position
+    }
   }
 
+  lock_servo = !lock_servo;
   if(old_lock != lock_servo){
     state_change = true;
   }
@@ -338,10 +342,10 @@ void lock_toggle(int state){                                          // Control
 void Indication(){                    // Control the Indicators
   if(lock_servo){                     // Drive the LOCK_LED based on the lock servo status
     digitalWrite(LOCK_LED, HIGH);
-    buzzer_active(200);               // Beep the buzzer for 200ms
+    buzzer_active(100);               // Beep the buzzer for 200ms
   }else{
     digitalWrite(LOCK_LED, LOW);
-    buzzer_active(200);               // Beep the buzzer for 200ms
+    buzzer_active(100);               // Beep the buzzer for 200ms
   }
 }
 
