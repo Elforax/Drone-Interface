@@ -25,7 +25,7 @@ bool const DEVMODE = true;          // Activeerd de serial poort voor debugging
 bool lock_servo = false;            // Status van de lock servo (true = Locked; false = Open) 
 bool lock_flag = false;
 bool state_change = false;          // When a status changes this will be set true
-int lock_speed = 1;
+int lock_speed = 1;                 // Servo speed in ms per step
 
 //CAN bus variables
 unsigned int msg_id = 0x7FF;        // recieved Message ID
@@ -135,7 +135,8 @@ void can_input(){                             // Procces the CAN inputs based on
     switch(msg_id){
     case 0x110:
       if(Data[0] == 0 || Data[0] == 1){
-        lock_toggle();
+        lock_flag = true;
+        //lock_toggle();
       }
       break;
     case 0x111:

@@ -1,5 +1,5 @@
-// Copyright (c) Sandeep Mistry. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+#define DELAY 500
+#define TESTS 8
 
 #include <CAN.h>
 
@@ -7,75 +7,138 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
 
-  Serial.println("CAN Sender");
+  Serial.println("CAN Tester");
 
   // start the CAN bus at 500 kbps
   if (!CAN.begin(500E3)) {
     Serial.println("Starting CAN failed!");
     while (1);
   }
+  delay(3000);
 }
 
 bool is_sending = false;
+unsigned int running_test = 0;
 
 void loop() {
-  Serial.println("ID number please 0-2047:");
-  //while(!Serial.available()){}
-  int id = SerialReadInt();
-  if(id <= 0x7FF){
-    is_sending = true;
-    while(is_sending){
-      Serial.print("ID: ");
-      Serial.println(id, HEX);
+  while(running_test < TESTS){
+    sender(running_test++);
+  }
+  reciever();
+}
 
-      Serial.println("byte amount please 1-8 (0 is cancel):");
-      //while(!Serial.available()){}
-      int byte_amount = SerialReadInt();
-      if(byte_amount <= 8){
-        Serial.println(byte_amount);
-        if(byte_amount == 0){
-          is_sending = false;
-        }
-      }
+void sender(unsigned int test_id){
+  Serial.print("Running test ");
+  Serial.println(test_id);
+
+  bool test_passed = false;
+  // add switch case with test here!
+  switch(test_id){
+    case 0:
+      Serial.print("Sending packet ... ");
+
+      CAN.beginPacket(0x110);
+      CAN.write(0);
+      CAN.endPacket();
+
+      Serial.println("done");
       delay(1000);
-    }
-  }
-  delay(1000);
-  //sender(0x001, 8);
-}
+      
+      Serial.print("Sending packet ... ");
 
-int SerialReadInt(){
-  int result;
-  if(Serial.available() > 0){
-   result = Serial.parseInt();
+      CAN.beginPacket(0x110);
+      CAN.write(1);
+      CAN.endPacket();
+
+      Serial.println("done");
+      test_passed = true;
+    break;
+    
+    case 1:
+      Serial.print("Sending packet ... ");
+    
+      CAN.beginPacket(0x100);
+      CAN.write(0);
+      CAN.endPacket();
+
+      Serial.println("done");
+      test_passed = true;
+    break;
+    case 2:
+
+    break;
+    case 3:
+
+    break;
+    case 4:
+
+    break;
+    case 5:
+      Serial.print("Sending packet ... ");
+
+      CAN.beginPacket(0x115);
+      CAN.write(100);
+      CAN.write(100);
+      CAN.write(100);
+      CAN.write(100);
+      CAN.write(100);
+      CAN.endPacket();
+
+      Serial.println("done");
+      test_passed = true;
+    break;
+    default:
+      Serial.println("Unknown Test");
+    break;
+  }
+  
+  delay(DELAY);
+
+  Serial.println("");
+  Serial.println("");
+  
+  reciever();
+  if(test_passed){
+    Serial.print("Test ");
+    Serial.print(test_id);
+    Serial.println(" Done..");
   }else{
-    result = 0xFFF;
+    Serial.print("Test ");
+    Serial.print(test_id);
+    Serial.println(" Fail..");
   }
-  return result;
-}
-
-void sender(unsigned int id, unsigned int packet_size){
-    // send packet: id is 11 bits, packet can contain up to 8 bytes of data
-  if(packet_size > 8){
-    packet_size = 8;
-  }
-  
-
-  
-  for(int i=0; i<packet_size;i++){
-    Serial.print("information on byte (");
-    Serial.print(i+1);
-    Serial.println(")");
-  }
-  //CAN.beginPacket(id);
-  
-  //CAN.endPacket();
-  //Serial.print("Sending packet ... ");
-  //Serial.println("done");
-
-  delay(1000);
 }
 
 void reciever(){
+  int packetSize = CAN.parsePacket();
   
+  if (packetSize) {
+    // received a packet
+    Serial.print("Received ");
+
+    if (CAN.packetExtended()) {
+    }
+
+    if (CAN.packetRtr()) {
+    }
+
+    Serial.print("packet with id 0x");
+    Serial.print(CAN.packetId(), HEX);
+
+    if (CAN.packetRtr()) {
+    } else {
+      Serial.print(" and length ");
+      Serial.println(packetSize);
+
+      // only print packet data for non-RTR packets
+      while (CAN.available()) {
+        Serial.print(CAN.read());
+      }
+      Serial.println();
+    }
+
+    Serial.println();
+  }
+
+  delay(DELAY);
 }

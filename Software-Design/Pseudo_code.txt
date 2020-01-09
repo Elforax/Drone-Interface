@@ -8,7 +8,6 @@
  * Inputs:
  * PWM inputs 2x 
  * CAN bus input (SPI)
- * RS485 bus (RX, TX)
  * 
  * Outputs:
  * PWM 1x (servo type)
