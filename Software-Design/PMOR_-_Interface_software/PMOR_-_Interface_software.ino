@@ -30,7 +30,7 @@ int lock_speed = 1;                 // Servo speed in ms per step
 //CAN bus variables
 unsigned int msg_id = 0x7FF;        // recieved Message ID
 unsigned int packet_size = 0;       // recieved Packet size
-byte Data[8];                       // recieved Data array of 8 bytes
+byte volatile Data[8];              // recieved Data array of 8 bytes
 
 long debouncing_time = 50;          // Debouncing Time in Milliseconds
 volatile unsigned long last_micros; // Elapsed time while debouncing
@@ -43,7 +43,7 @@ void(* resetFunc) (void) = 0;       // Arduino internal reset routine
 
 void setup() {
   if(DEVMODE){                      // Opens serial if dev mode is true
-    Serial.begin(115200);
+    Serial.begin(9600);             // 115200
     Serial.println("Dev mode active!");
   }
 
@@ -69,12 +69,12 @@ void setup() {
   Lock.attach(LOCK_SERVO);
   Ext_servo.attach(EXT_PWM);
 
-  lock_flag = true;                     // Lock de Servo on startup (!! Needs to change to when the button is pressed!!)
+  lock_flag = true;                   // Lock de Servo on startup (!! Needs to change to when the button is pressed!!)
   ext_servo_control(0, false);        // Sets the External servo to 0 degrees
 
   noInterrupts();                     // turn off interrupts
   interruptOn = false;                // set interrupt state too false
-  //can_write(0x7FF);                   // --------- > function is incompleter needes to be finished!!!!
+  can_write(0x7FF);                   
   interrupts();                       // turn on interrupts
   interruptOn = true;                 // set interrupt state too true
   
@@ -152,16 +152,17 @@ void can_input(){                             // Procces the CAN inputs based on
       break;
     case 0x113:
       if(Data[0] == 0){
-        ext_servo_control(Data[0], false);
+        ext_servo_control(1, false);
       }
       if(Data[0] == 1){
         ext_servo_control(180, false);
       }
       break;
     case 0x115:
-      int time_ms = 0;
-      for(int i=0; i<sizeof(Data);i++){
-        time_ms += Data[i];
+     long int time_ms = 0;
+      for(int i=0; i<sizeof(Data) ;i++){
+        time_ms += Data[i] * (long int)pow(10,i);
+        Serial.println(time_ms);
       }
       buzzer_active(time_ms);
       break;
@@ -171,7 +172,7 @@ void can_input(){                             // Procces the CAN inputs based on
   }
 }
 
-void can_write(unsigned int id){              // Write Information to the CAN bus with a specific ID -------------> Needs finishing still !!!!
+void can_write(unsigned int id){              // Write Information to the CAN bus with a specific ID
   if(interruptOn){
     noInterrupts();
   }
@@ -190,20 +191,14 @@ void can_write(unsigned int id){              // Write Information to the CAN bu
       CAN.write(Ext_servo.read());
       CAN.endPacket();
       break;
-    case 0x092:
-      //EEPROM register response
-      CAN.beginPacket(id);
-      CAN.write('0');
-      CAN.endPacket();
-      break;
     case 0x093:
-      //EEPROM register response
+     // Indicators
       CAN.beginPacket(id);
-      CAN.write(digitalRead(14));
-      CAN.write(digitalRead(2));
-      CAN.write(digitalRead(6));
-      CAN.write(digitalRead(16));
-      CAN.write(digitalRead(18));
+      CAN.write(digitalRead(14));         // Push button switch
+      CAN.write(digitalRead(2));          // External Int top module
+      CAN.write(digitalRead(6));          // External Int bottom module
+      CAN.write(digitalRead(16));         // Lock LED
+      CAN.write(digitalRead(18));         // Buzzer 
       CAN.endPacket();
       break;
     case 0x7FF:
@@ -251,14 +246,17 @@ void can_read(){                              // Read the CAN bus if a message i
       while (CAN.available()) {
         if(i < sizeof(Data)){
           Data[i] = CAN.read();
-          Serial.print(Data[i]);
+          Serial.println(Data[i]);
+          i++;
         }
       }
       Serial.println();
     }
+
+    
     
     if(packet_size != 8){
-      for(int i = packet_size-1; i<sizeof(Data); i++){
+      for(int i = packet_size; i<sizeof(Data); i++){
         Data[i] = 0;
       }
     }
@@ -350,8 +348,14 @@ void Indication(){                    // Control the Indicators
   }
 }
 
-void buzzer_active(int ms){           // Run the buzzer for a given amount og timein ms
+void buzzer_active(long int ms){           // Run the buzzer for a given amount og timein ms
+  Serial.print("Buzzer active for ");
+  Serial.print(ms);
+  Serial.println(" ms");
+  
   digitalWrite(BUZZER, HIGH);
-  delay(ms);
+  for(long int i=0; i<ms; i++){
+    delay(1);
+  }
   digitalWrite(BUZZER, LOW); 
 }
