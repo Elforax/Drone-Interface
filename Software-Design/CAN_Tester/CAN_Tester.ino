@@ -147,14 +147,14 @@ void sender(unsigned int test_id){
       test_passed = true;
     break;
     case 5:
-      Serial.println("Activate Buzzer for 1 sec");
+      Serial.println("Activate Buzzer for 5 sec");
       Serial.println("");
       Serial.print("Sending packet ... ");
 
       CAN.beginPacket(0x115);
       CAN.write(0); // 1
       CAN.write(0); // 10
-      CAN.write(10); // 100
+      CAN.write(50); // 100
       CAN.endPacket();
 
       Serial.println("done");
