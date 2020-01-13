@@ -1,7 +1,6 @@
 /* -- Lib reference --//
  * Modbus:    https://github.com/andresarmento/modbus-arduino
  * CAN:       https://github.com/sandeepmistry/arduino-CAN
- * EEPROM:    Internal EEPROM lib
  * Servo:     Internal servo lib
  * Interupt:  Internal interupt lib
  */
@@ -74,7 +73,7 @@ void setup() {
 
   noInterrupts();                     // turn off interrupts
   interruptOn = false;                // set interrupt state too false
-  can_write(0x7FF);                   
+  //can_write(0x7FF);                   
   interrupts();                       // turn on interrupts
   interruptOn = true;                 // set interrupt state too true
   
